@@ -1,0 +1,38 @@
+# Site settings
+title: Today I Learned
+email: nsdragon@gmail.com
+description: > # this means to ignore newlines until "baseurl:"
+  Today I Learned, by Antonio Romero
+baseurl: "/til" # the subpath of your site, e.g. /blog/
+url: "https://jaromero.github.io" # the base hostname & protocol for your site
+twitter_username: ja_romero
+github_username:  jaromero
+
+# Files handled by gulp
+exclude: [
+  'gulpfile.coffee',
+  'node_modules',
+  'package.json',
+  'bower.json',
+  'images',
+  'fonts',
+  '**.png',
+  '**.jpg',
+  '**.jpeg',
+  '**.gif',
+  '**.webp',
+  '**.svg'
+]
+
+include:
+  - .no-jekyll
+
+# Build settings
+source: .staging
+destination: dist
+future: true
+show_drafts: true
+
+# Plugins
+markdown: kramdown
+highlighter: pygments
