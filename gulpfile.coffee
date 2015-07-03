@@ -62,7 +62,7 @@ gulp.task 'moveFiles', ['scripts', 'styles'], =>
   # We're doing this to avoid modifying the files in our working directory,
   # and also because of how jekyll works re: building files and basedir
   files = [
-    'app/.nojekyll'
+    'app/.no-jekyll'
     'app/*.md'
     'app/*.xml'
     'app/*.html'
@@ -137,6 +137,7 @@ gulp.task 'clean', =>
     '.staging'
     '.tmp'
     'dist/**/*'
+    'dist/.*'
     '!dist/.git'
   ]
 
