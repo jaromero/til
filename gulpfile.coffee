@@ -6,7 +6,6 @@ del         = require 'del'
 $           = require('gulp-load-plugins')()
 wiredep     = require('wiredep').stream
 shell       = require 'shelljs'
-debug = require 'gulp-debug'
 
 reload = browserSync.reload
 
@@ -196,6 +195,12 @@ gulp.task 'wiredep', =>
     .pipe wiredep
       ignorePath: /^(\.\.\/)*\.\./
     .pipe gulp.dest '_includes'
+
+gulp.task 'deploy', ['build'], =>
+  # Deploy to Github Pages
+  gulp.src 'dist'
+    .pipe $.subtree()
+    .pipe $.clean()
 
 # Default task
 gulp.task 'default', ['build']
