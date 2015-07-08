@@ -44,12 +44,12 @@ gulp.task 'jekyll', ['moveAssets'], =>
   # Build the jekyll site for deployment
   # Uses _config.yml only
   # Run after useref to make sure all the files are prepared correctly
-  shell.exec 'jekyll build'
+  shell.exec 'bundle exec jekyll build'
 
 gulp.task 'jekyll:tmp', ['moveFiles'], =>
   # Build the jekyll site for serving with livereload
   # Uses both _config.yml and _config.serve.yml
-  shell.exec 'jekyll build --config \
+  shell.exec 'bundle exec jekyll build --config \
         _config.yml,_config.serve.yml'
 
 # These two tasks are to be able to force a reload
