@@ -12,7 +12,7 @@ I'm typing all this before the rest of the default Jekyll post, so I'll just lea
 
 For today though, I'll just post my current gulpfile. It's what I've come up with, admittedly just to be able to use bower and wiredep with jekyll:
 
-{% highlight coffee %}
+```coffee
 {% raw %}
 # Gulpfile
 
@@ -221,7 +221,7 @@ gulp.task 'deploy', ['build'], =>
 # Default task
 gulp.task 'default', ['build']
 {% endraw %}
-{% endhighlight %}
+```
 
 -----
 
