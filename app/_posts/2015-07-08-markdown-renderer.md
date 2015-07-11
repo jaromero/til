@@ -2,7 +2,7 @@
 layout: post
 title:  "Switching Markdown renderers"
 date:   2015-07-08 20:00:00
-categories: update jekyll markdown
+tags:   update jekyll markdown
 ---
 By default, jekyll uses the [kramdown](http://kramdown.gettalong.org/) parser for Markdown files. I haven't actually tried it yet as standalone, but one thing I couldn't seem to get it to work with right, is GFM-style code blocks:
 

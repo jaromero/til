@@ -2,7 +2,7 @@
 layout: post
 title:  "The Github User Info API"
 date:   2015-07-09 20:00:00
-categories: github json jekyll
+tags:   github json jekyll
 ---
 Github has an API of sorts for getting information about users.
 

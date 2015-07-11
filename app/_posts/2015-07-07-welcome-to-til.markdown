@@ -2,7 +2,7 @@
 layout: post
 title:  "Welcome to TIL!"
 date:   2015-07-07 20:00:00
-categories: update
+tags:   update
 ---
 Hello everyone!
 
