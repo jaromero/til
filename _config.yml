@@ -33,6 +33,9 @@ destination: dist
 future: true
 show_drafts: true
 
+# Permalinks
+permalink: "/:year/:month/:title"
+
 # Plugins
 markdown: redcarpet
 
