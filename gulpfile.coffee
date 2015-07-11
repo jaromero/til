@@ -16,7 +16,7 @@ userefOpts =
     "<link rel='stylesheet' href='{{ '/#{target}' |
         prepend: site.baseurl }}'>"
 
-gulp.task 'styles', =>
+gulp.task 'styles', ->
   # Build scss styles into the staging and tmp directories
   gulp.src 'app/styles/**/*.scss'
     .pipe $.plumber()
@@ -32,7 +32,7 @@ gulp.task 'styles', =>
     .pipe gulp.dest '.tmp/styles'
     .pipe reload stream: true
 
-gulp.task 'scripts', =>
+gulp.task 'scripts', ->
   # Build coffeescript files into staging and tmp
   gulp.src 'app/scripts/**/*.{coffee,litcoffee}'
     .pipe $.coffee()
@@ -40,13 +40,13 @@ gulp.task 'scripts', =>
     .pipe gulp.dest '.staging/scripts'
     .pipe gulp.dest '.tmp/scripts'
 
-gulp.task 'jekyll', ['moveAssets'], =>
+gulp.task 'jekyll', ['moveAssets'], ->
   # Build the jekyll site for deployment
   # Uses _config.yml only
   # Run after useref to make sure all the files are prepared correctly
   shell.exec 'bundle exec jekyll build'
 
-gulp.task 'jekyll:tmp', ['moveFiles'], =>
+gulp.task 'jekyll:tmp', ['moveFiles'], ->
   # Build the jekyll site for serving with livereload
   # Uses both _config.yml and _config.serve.yml
   shell.exec 'bundle exec jekyll build --config \
@@ -56,7 +56,7 @@ gulp.task 'jekyll:tmp', ['moveFiles'], =>
 gulp.task 'reloadAfterBuild', ['jekyll:tmp'], reload
 gulp.task 'reloadAfterScripts', ['scripts'], reload
 
-gulp.task 'moveFiles', ['scripts', 'styles'], =>
+gulp.task 'moveFiles', ['scripts', 'styles'], ->
   # Moves files to the staging directory to prepare for thejekyll build tasks
   # We're doing this to avoid modifying the files in our working directory,
   # and also because of how jekyll works re: building files and basedir
@@ -75,7 +75,7 @@ gulp.task 'moveFiles', ['scripts', 'styles'], =>
   gulp.src files, base: './app/'
     .pipe gulp.dest '.staging'
 
-gulp.task 'moveAssets', ['useref'], =>
+gulp.task 'moveAssets', ['useref'], ->
   # Move compiled, useref'd CSS and JS files to where they belong
   gulp.src '.staging/_includes/scripts/**/*.js'
     .pipe $.rename dirname: 'scripts'
@@ -85,7 +85,7 @@ gulp.task 'moveAssets', ['useref'], =>
     .pipe $.rename dirname: 'styles'
     .pipe gulp.dest '.staging'
 
-gulp.task 'useref', ['moveFiles'], =>
+gulp.task 'useref', ['moveFiles'], ->
   # Do the useref on files in the staging directory
   assets = $.useref.assets
     searchPath: ['.', '.staging']
@@ -99,7 +99,7 @@ gulp.task 'useref', ['moveFiles'], =>
     .pipe $.useref userefOpts
     .pipe gulp.dest '.staging/_includes'
 
-gulp.task 'images', =>
+gulp.task 'images', ->
   # Optimize images
   gulp.src 'app/images/**/*'
     .pipe $.if $.if.isFile, $.cache $.imagemin
@@ -111,7 +111,7 @@ gulp.task 'images', =>
       this.end()
     .pipe gulp.dest 'dist/images'
 
-gulp.task 'fonts', =>
+gulp.task 'fonts', ->
   # Copy font files obtained with bower
   bowerFiles = require 'main-bower-files'
 
@@ -120,7 +120,7 @@ gulp.task 'fonts', =>
     .pipe gulp.dest '.tmp/fonts'
     .pipe gulp.dest 'dist/fonts'
 
-gulp.task 'extras', =>
+gulp.task 'extras', ->
   # Copy all files not handled by jekyll or other gulp tasks
   gulp.src [
     'app/*.*'
@@ -129,7 +129,7 @@ gulp.task 'extras', =>
     dot: true
   .pipe gulp.dest 'dist'
 
-gulp.task 'clean', =>
+gulp.task 'clean', ->
   # Clean staging, tmp and _site dirs
   # Only really necessary for build
   del [
@@ -141,7 +141,7 @@ gulp.task 'clean', =>
   ]
 
 # Basic entry point
-gulp.task 'build', ['jekyll', 'images', 'fonts', 'extras'], =>
+gulp.task 'build', ['jekyll', 'images', 'fonts', 'extras'], ->
   # Remove stray files from staging, just in case
   del ['.staging/_includes/scripts', '.staging/_includes/styles']
 
@@ -149,7 +149,7 @@ gulp.task 'build', ['jekyll', 'images', 'fonts', 'extras'], =>
   gulp.src 'dist/**/*'
     .pipe $.size {title: 'build', gzip: true}
 
-gulp.task 'serve', ['jekyll:tmp', 'fonts'], =>
+gulp.task 'serve', ['jekyll:tmp', 'fonts'], ->
   # Run the web server
   # Build a temporary jekyll site out of the staging dir
   # and map the temp dir into the browsersync server
@@ -168,6 +168,8 @@ gulp.task 'serve', ['jekyll:tmp', 'fonts'], =>
     'app/_includes/**/*'
     'app/_layouts/**/*'
     'app/_posts/**/*'
+    '_config.yml'
+    '_config.serve.yml'
   ]
   , ['reloadAfterBuild']
 
@@ -184,19 +186,19 @@ gulp.task 'serve', ['jekyll:tmp', 'fonts'], =>
   gulp.watch 'app/fonts/**/*', ['fonts']
   gulp.watch 'bower.json', ['wiredep', 'fonts']
 
-gulp.task 'wiredep', =>
+gulp.task 'wiredep', ->
   # Insert bower dependencies into files
-  gulp.src '_sass/*.scss'
+  gulp.src 'app/styles/*.scss'
     .pipe wiredep
       ignorePath: /^(\.\.\/)+/
-    .pipe gulp.dest '_sass'
+    .pipe gulp.dest 'app/styles'
 
-  gulp.src '_includes/*.html'
+  gulp.src 'app/_includes/*.html'
     .pipe wiredep
       ignorePath: /^(\.\.\/)*\.\./
-    .pipe gulp.dest '_includes'
+    .pipe gulp.dest 'app/_includes'
 
-gulp.task 'deploy', ['build'], =>
+gulp.task 'deploy', ['build'], ->
   # Deploy to Github Pages
   gulp.src 'dist'
     .pipe $.subtree()
