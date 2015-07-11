@@ -4,6 +4,8 @@ title:  "The Github User Info API"
 date:   2015-07-09 20:00:00
 tags:   github json jekyll
 ---
+**EDIT 15-07-10:** This is [rate-limited](https://developer.github.com/v3/#rate-limiting) to 60 unauthenticated requests per hour, so I've gone with something like the second approach.
+
 Github has an API of sorts for getting information about users.
 
 Well, it's not really an API, since it's just a json file: `https://api.github.com/users/<username>`
