@@ -1,0 +1,536 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Today I Learned</title>
+    <description>Today I Learned, by Antonio Romero
+</description>
+    <link>https://jaromero.github.io/til/</link>
+    <atom:link href="https://jaromero.github.io/til/feed.xml" rel="self" type="application/rss+xml" />
+    <pubDate>Fri, 31 Jul 2015 23:35:17 -0500</pubDate>
+    <lastBuildDate>Fri, 31 Jul 2015 23:35:17 -0500</lastBuildDate>
+    <generator>Jekyll v2.4.0</generator>
+    
+      <item>
+        <title>What, exactly, is apt-get update downloading?</title>
+        <description>&lt;p&gt;So I&amp;#39;m struggling with my ISP at the moment (whatever you do, do &lt;em&gt;not&lt;/em&gt; sign up with &lt;a href=&quot;http://izzi.mx&quot;&gt;izzi&lt;/a&gt; because they absolutely don&amp;#39;t know what they&amp;#39;re doing), and I&amp;#39;ve noticed that for a few days now, my apt updates have been taking an extremely long amount of time to finish.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/Screenshot%202015-07-31%2023.08.32.png&quot; alt=&quot;aptitude trying to update&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;There&amp;#39;s clearly something going on there, but neither apt-get nor aptitude give you much info to work with as things happen. You &lt;em&gt;can&lt;/em&gt;, however, find out what files it downloads in order to determine whether updates are available or not.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;#39;s how you obtain a list of all those files:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;apt-get update --print-uris   &lt;span class=&quot;c&quot;&gt;# No root required for this one&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This gives you a list that looks like this:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;&amp;#39;http://archive.ubuntu.com/ubuntu/dists/vivid/main/source/Sources.bz2&amp;#39; archive.ubuntu.com_ubuntu_dists_vivid_main_source_Sources 0 :
+&amp;#39;http://archive.ubuntu.com/ubuntu/dists/vivid/restricted/source/Sources.bz2&amp;#39; archive.ubuntu.com_ubuntu_dists_vivid_restricted_source_Sources 0 :
+&amp;#39;http://archive.ubuntu.com/ubuntu/dists/vivid/universe/source/Sources.bz2&amp;#39; archive.ubuntu.com_ubuntu_dists_vivid_universe_source_Sources 0 :
+&amp;#39;http://archive.ubuntu.com/ubuntu/dists/vivid/multiverse/source/Sources.bz2&amp;#39; archive.ubuntu.com_ubuntu_dists_vivid_multiverse_source_Sources 0 :
+&amp;#39;http://archive.ubuntu.com/ubuntu/dists/vivid/main/binary-amd64/Packages.bz2&amp;#39; archive.ubuntu.com_ubuntu_dists_vivid_main_binary-amd64_Packages 0 :
+&amp;#39;http://archive.ubuntu.com/ubuntu/dists/vivid/restricted/binary-amd64/Packages.bz2&amp;#39; archive.ubuntu.com_ubuntu_dists_vivid_restricted_binary-amd64_Packages 0 :
+&amp;#39;http://archive.ubuntu.com/ubuntu/dists/vivid/universe/binary-amd64/Packages.bz2&amp;#39; archive.ubuntu.com_ubuntu_dists_vivid_universe_binary-amd64_Packages 0 :
+&amp;#39;http://archive.ubuntu.com/ubuntu/dists/vivid/multiverse/binary-amd64/Packages.bz2&amp;#39; archive.ubuntu.com_ubuntu_dists_vivid_multiverse_binary-amd64_Packages 0 :
+&amp;#39;http://archive.ubuntu.com/ubuntu/dists/vivid/main/binary-i386/Packages.bz2&amp;#39; archive.ubuntu.com_ubuntu_dists_vivid_main_binary-i386_Packages 0 :
+&amp;#39;http://archive.ubuntu.com/ubuntu/dists/vivid/restricted/binary-i386/Packages.bz2&amp;#39; archive.ubuntu.com_ubuntu_dists_vivid_restricted_binary-i386_Packages 0 :
+&amp;#39;http://archive.ubuntu.com/ubuntu/dists/vivid/universe/binary-i386/Packages.bz2&amp;#39; archive.ubuntu.com_ubuntu_dists_vivid_universe_binary-i386_Packages 0 :
+...
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;As you can see, the first part is the URL of the file to download.&lt;/p&gt;
+
+&lt;p&gt;To turn this mess into something I can use, I did this:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;apt-get update --print-uris &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; gawk &lt;span class=&quot;s1&quot;&gt;&amp;#39;{print $1}&amp;#39;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    grep &lt;span class=&quot;s1&quot;&gt;&amp;#39;bz2&amp;#39;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; sed &lt;span class=&quot;s2&quot;&gt;&amp;quot;s/&amp;#39;//g&amp;quot;&lt;/span&gt; &amp;gt; apt-list.txt
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Which gives me just the URLs, one per line:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;cat apt-list.txt
+http://archive.ubuntu.com/ubuntu/dists/vivid/main/source/Sources.bz2
+http://archive.ubuntu.com/ubuntu/dists/vivid/restricted/source/Sources.bz2
+http://archive.ubuntu.com/ubuntu/dists/vivid/universe/source/Sources.bz2
+http://archive.ubuntu.com/ubuntu/dists/vivid/multiverse/source/Sources.bz2
+http://archive.ubuntu.com/ubuntu/dists/vivid/main/binary-amd64/Packages.bz2
+http://archive.ubuntu.com/ubuntu/dists/vivid/restricted/binary-amd64/Packages.bz2
+http://archive.ubuntu.com/ubuntu/dists/vivid/universe/binary-amd64/Packages.bz2
+http://archive.ubuntu.com/ubuntu/dists/vivid/multiverse/binary-amd64/Packages.bz2
+http://archive.ubuntu.com/ubuntu/dists/vivid/main/binary-i386/Packages.bz2
+http://archive.ubuntu.com/ubuntu/dists/vivid/restricted/binary-i386/Packages.bz2
+http://archive.ubuntu.com/ubuntu/dists/vivid/universe/binary-i386/Packages.bz2
+...
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I can now do whatever I want with this. For example, I used wget to download them all, and took note when I noticed a particular file having issues trying to download:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;wget -i apt-list.txt --progress&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;dot -O /dev/null
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And then, with the problematic URL, do the following to get the actual time spent:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;/usr/bin/time wget http://dl.google.com/linux/chrome/deb/dists/stable/main/binary-amd64/Packages.bz2 -O /dev/null
+--2015-07-31 22:51:27--  http://dl.google.com/linux/chrome/deb/dists/stable/main/binary-amd64/Packages.bz2
+Resolving dl.google.com &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;dl.google.com&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;... 64.233.169.93, 64.233.169.190, 64.233.169.136, ...
+Connecting to dl.google.com &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;dl.google.com&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;64.233.169.93&lt;span class=&quot;p&quot;&gt;|&lt;/span&gt;:80... connected.
+HTTP request sent, awaiting response... &lt;span class=&quot;m&quot;&gt;200&lt;/span&gt; OK
+Length: &lt;span class=&quot;m&quot;&gt;1167&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;1.1K&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;application/octet-stream&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+Saving to: ‘/dev/null’
+
+/dev/null                 100%&lt;span class=&quot;o&quot;&gt;[=======================================&lt;/span&gt;&amp;gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;   1.14K  --.-KB/s   in 0s
+
+2015-07-31 22:51:27 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;94.0 MB/s&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; - ‘/dev/null’ saved &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;1167/1167&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+
+0.00user 0.00system 3:20.19elapsed 0%CPU &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;0avgtext+0avgdata 4364maxresident&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;k
+0inputs+0outputs &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;0major+252minor&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;pagefaults 0swaps
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</description>
+        <pubDate>Fri, 31 Jul 2015 17:30:00 -0500</pubDate>
+        <link>https://jaromero.github.io/til/2015/07/what-exactly-is-apt-get-update-downloading</link>
+        <guid isPermaLink="true">https://jaromero.github.io/til/2015/07/what-exactly-is-apt-get-update-downloading</guid>
+        
+        <category>apt</category>
+        
+        
+      </item>
+    
+      <item>
+        <title>Custom browsersync configs with Gulp</title>
+        <description>&lt;p&gt;&lt;em&gt;(This is mostly meant for gulp, but I figure it&amp;#39;s not really hard to adapt for grunt. It should be pretty straightforward.)&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://browsersync.io&quot;&gt;Browsersync&lt;/a&gt; is a node utility that allows us to preview and test apps on many different browsers simultaneously. It&amp;#39;s usually used with a file-watching utility as well, to trigger reloads when file changes are detected, and so avoid having to focus each browser and hit reload on all of them (or even picking devices up to reload those). It is even able to syncronize form data and click events, so that testing can be done much faster and in a more streamlined way.&lt;/p&gt;
+
+&lt;p&gt;Many &lt;a href=&quot;http://yeoman.io/generators&quot;&gt;yeoman generators&lt;/a&gt; now use browsersync as part of the commonly found &lt;code&gt;watch&lt;/code&gt; task (whether using grunt or gulp). They provide some sane defaults to allow you to get to testing as soon and as easily as possible.&lt;/p&gt;
+
+&lt;p&gt;Still, I wanted to get a tiny bit more customization, because my system is a bit weird (as in, custom browser scripts and etc) and I don&amp;#39;t want to save my special preferences into version control if I can avoid it. I also want to be able to specify a different browser to open, other than my system default (but also not force that browser on anyone else).&lt;/p&gt;
+
+&lt;p&gt;On the terminal, browsersync can use a custom config file (the default config is generated by doing &lt;code&gt;browser-sync init&lt;/code&gt;). This is good for when using browsersync as standalone, but not good enough when I&amp;#39;m using gulp.&lt;/p&gt;
+
+&lt;p&gt;Still, having the config file is actually useful, because we&amp;#39;re now going to do things with it. At the top of my gulpfile, I can do this (ES6 syntax using &lt;a href=&quot;babeljs.io&quot;&gt;Babel&lt;/a&gt;):&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kd&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;bsConfig&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;try&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;bsConfig&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;./bs-config.js&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// or wherever it is&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;catch&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;bsConfig&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{};&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And further down, in the &lt;code&gt;serve&lt;/code&gt; task, this is what I have:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;task&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;serve&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;styles&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;fonts&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;scripts&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;browserSync&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;Object&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;assign&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({},&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;bsConfig&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;notify&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;server&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;baseDir&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;.tmp&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;app&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;routes&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;s1&quot;&gt;&amp;#39;/bower_components&amp;#39;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;bower_components&amp;#39;&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}));&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;// rest of the serve task ...&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This lets me keep my own configuration in &lt;code&gt;bs-config.js&lt;/code&gt;, maybe even outside version control, and override it in the gulpfile itself, with whatever the project actually needs.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Note&lt;/strong&gt;: &lt;code&gt;Object.assign()&lt;/code&gt; is an ES6 thing. If not using Babel, you can instead use &lt;a href=&quot;https://lodash.com/docs#assign&quot;&gt;lo-dash&amp;#39;s &lt;code&gt;assign&lt;/code&gt;&lt;/a&gt;:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;task&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;serve&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;styles&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;fonts&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;scripts&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(){&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;assign&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;lodash.assign&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;browserSync&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;assign&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({},&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;bsConfig&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;notify&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;server&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;baseDir&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;.tmp&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;app&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;routes&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;s1&quot;&gt;&amp;#39;/bower_components&amp;#39;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;bower_components&amp;#39;&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}));&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;// ...&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;(Or even &lt;a href=&quot;http://api.jquery.com/jQuery.extend/&quot;&gt;jQuery&amp;#39;s extend&lt;/a&gt;, if that&amp;#39;s what floats your boat.)&lt;/p&gt;
+</description>
+        <pubDate>Mon, 13 Jul 2015 15:00:00 -0500</pubDate>
+        <link>https://jaromero.github.io/til/2015/07/custom-browsersync-config-with-gulp</link>
+        <guid isPermaLink="true">https://jaromero.github.io/til/2015/07/custom-browsersync-config-with-gulp</guid>
+        
+        <category>browsersync</category>
+        
+        <category>gulp</category>
+        
+        
+      </item>
+    
+      <item>
+        <title>Sass Guidelines</title>
+        <description>&lt;p&gt;&lt;a href=&quot;https://github.com/brigade/scss-lint&quot;&gt;SCSS-Lint&lt;/a&gt; is a nice tool that I&amp;#39;m looking to integrate into my workflow. This is additional to trying to come up with coding guidelines for our projects. Actually, SCSS-Lint&amp;#39;s &lt;a href=&quot;https://github.com/brigade/scss-lint/blob/master/lib/scss_lint/linter/README.md&quot;&gt;rules&lt;/a&gt; are very similar to the rules I was thinking of.&lt;/p&gt;
+
+&lt;p&gt;The one thing I would really like though is to have it as an npm plugin (to use with gulp), but having it run in the editor itself is probably a better idea.&lt;/p&gt;
+
+&lt;p&gt;Meanwhile, one of my coworkers (&lt;a href=&quot;https://github.com/gatero&quot;&gt;@gatero&lt;/a&gt;) shared these &lt;a href=&quot;http://sass-guidelin.es/&quot;&gt;Sass Guidelines&lt;/a&gt; by &lt;a href=&quot;http://hugogiraudel.com/&quot;&gt;Hugo Giraudel&lt;/a&gt;. These are also very similar, and even a config for SCSS-Lint is provided.&lt;/p&gt;
+
+&lt;p&gt;I might just take these guidelines and configs and dump them into the &lt;a href=&quot;https://github.com/jaromero/generator-gulp-coffee-webapp&quot;&gt;yeoman generator&lt;/a&gt; I&amp;#39;ve been working on. It&amp;#39;s something I&amp;#39;d also like to finish (and maybe rename) for our team to use as a standard starting point.&lt;/p&gt;
+</description>
+        <pubDate>Fri, 10 Jul 2015 15:00:00 -0500</pubDate>
+        <link>https://jaromero.github.io/til/2015/07/sass-guidelines</link>
+        <guid isPermaLink="true">https://jaromero.github.io/til/2015/07/sass-guidelines</guid>
+        
+        <category>scss</category>
+        
+        <category>lint</category>
+        
+        <category>guidelines</category>
+        
+        
+      </item>
+    
+      <item>
+        <title>The Github User Info API</title>
+        <description>&lt;p&gt;&lt;strong&gt;EDIT 15-07-10:&lt;/strong&gt; This is &lt;a href=&quot;https://developer.github.com/v3/#rate-limiting&quot;&gt;rate-limited&lt;/a&gt; to 60 unauthenticated requests per hour, so I&amp;#39;ve gone with something like the second approach.&lt;/p&gt;
+
+&lt;p&gt;Github has an API of sorts for getting information about users.&lt;/p&gt;
+
+&lt;p&gt;Well, it&amp;#39;s not really an API, since it&amp;#39;s just a json file: &lt;code&gt;https://api.github.com/users/&amp;lt;username&amp;gt;&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;For example, this is what &lt;a href=&quot;https://api.github.com/users/jaromero&quot;&gt;mine&lt;/a&gt; shows:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-json&quot; data-lang=&quot;json&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;login&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;jaromero&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;id&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;794031&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;avatar_url&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;https://avatars.githubusercontent.com/u/794031?v=3&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;gravatar_id&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;url&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;https://api.github.com/users/jaromero&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;html_url&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;https://github.com/jaromero&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;followers_url&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;https://api.github.com/users/jaromero/followers&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;following_url&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;https://api.github.com/users/jaromero/following{/other_user}&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;gists_url&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;https://api.github.com/users/jaromero/gists{/gist_id}&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;starred_url&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;https://api.github.com/users/jaromero/starred{/owner}{/repo}&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;subscriptions_url&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;https://api.github.com/users/jaromero/subscriptions&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;organizations_url&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;https://api.github.com/users/jaromero/orgs&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;repos_url&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;https://api.github.com/users/jaromero/repos&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;events_url&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;https://api.github.com/users/jaromero/events{/privacy}&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;received_events_url&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;https://api.github.com/users/jaromero/received_events&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;type&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;User&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;site_admin&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;name&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;Antonio Romero&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;company&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;blog&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;https://plus.google.com/117253402437145808641/about&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;location&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;Mexico City&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;email&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;nsdragon@gmail.com&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;hireable&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;bio&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;public_repos&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;24&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;public_gists&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;followers&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;9&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;following&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;created_at&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;2011-05-17T18:05:50Z&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;quot;updated_at&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;2015-07-02T18:37:58Z&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Actually, I found this while trying to figure out a different issue. We&amp;#39;re looking at doing another of these jekyll blogs for our front-end team at &lt;a href=&quot;http://vincoorbis.com&quot;&gt;my company&lt;/a&gt;, and I wanted to see what the best way of showing authorship might be.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://gist.github.com/ravasthi/1834570&quot;&gt;This is one solution I found&lt;/a&gt;, which looks nice and self-contained.&lt;/p&gt;
+
+&lt;p&gt;Using the above json however, what I can do instead is add a custom &lt;code&gt;github-author&lt;/code&gt; field in the front matter, and use that to obtain things like the author&amp;#39;s avatar and his/her blog address and other such things.&lt;/p&gt;
+</description>
+        <pubDate>Thu, 09 Jul 2015 15:00:00 -0500</pubDate>
+        <link>https://jaromero.github.io/til/2015/07/github-user-api</link>
+        <guid isPermaLink="true">https://jaromero.github.io/til/2015/07/github-user-api</guid>
+        
+        <category>github</category>
+        
+        <category>json</category>
+        
+        <category>jekyll</category>
+        
+        
+      </item>
+    
+      <item>
+        <title>Switching Markdown renderers</title>
+        <description>&lt;p&gt;By default, jekyll uses the &lt;a href=&quot;http://kramdown.gettalong.org/&quot;&gt;kramdown&lt;/a&gt; parser for Markdown files. I haven&amp;#39;t actually tried it yet as standalone, but one thing I couldn&amp;#39;t seem to get it to work with right, is GFM-style code blocks:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;```coffee
+console.log &amp;#39;Hello, everyone!&amp;#39;
+bgColor = &amp;#39;#ccf&amp;#39;
+body = document.getElementsByTagName(&amp;#39;body&amp;#39;)[0]
+body.style.backgroundColor = bgColor
+```
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This doesn&amp;#39;t work out of the box. Instead, these are required:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;{% highlight coffee %}
+console.log &amp;#39;Hello, everyone!&amp;#39;
+bgColor = &amp;#39;#ccf&amp;#39;
+body = document.getElementsByTagName(&amp;#39;body&amp;#39;)[0]
+body.style.backgroundColor = bgColor
+{% endhighlight %}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;But this means that GFM syntax plugins in editors don&amp;#39;t quite work.&lt;/p&gt;
+
+&lt;p&gt;After a quick google search, however, I found &lt;a href=&quot;http://ajoz.github.io/2014/06/29/i-want-my-github-flavored-markdown/&quot;&gt;this post&lt;/a&gt; that suggests using &lt;a href=&quot;https://github.com/vmg/redcarpet&quot;&gt;redcarpet&lt;/a&gt; instead, which actually works (except for the fact that jekyll still attempts to parse liquid tags).&lt;/p&gt;
+
+&lt;p&gt;So now I can have fenced code blocks, Github style, with syntax highlighting on the resulting jekyll build:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-coffee&quot; data-lang=&quot;coffee&quot;&gt;&lt;span class=&quot;nx&quot;&gt;console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;log&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;Hello, everyone!&amp;#39;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;bgColor = &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;#ccf&amp;#39;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;body = &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;document&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;getElementsByTagName&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;body&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;body.style.backgroundColor = &lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;bgColor&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;```coffee
+console.log &amp;#39;Hello, everyone!&amp;#39;
+bgColor = &amp;#39;#ccf&amp;#39;
+body = document.getElementsByTagName(&amp;#39;body&amp;#39;)[0]
+body.style.backgroundColor = bgColor
+```
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;(Additionally, fencing a code block with &lt;code&gt;~&lt;/code&gt; would also be acceptable, and GFM also supports it.)&lt;/p&gt;
+
+&lt;p&gt;As an additional fun fact, I had to write the second code block above like this, to avoid liquid parsing:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;{{ &amp;quot;{%&amp;quot; }} highlight coffee %}
+console.log &amp;#39;Hello, everyone!&amp;#39;
+bgColor = &amp;#39;#ccf&amp;#39;
+body = document.getElementsByTagName(&amp;#39;body&amp;#39;)[0]
+body.style.backgroundColor = bgColor
+{{ &amp;quot;{%&amp;quot; }} endhighlight %}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;a href=&quot;http://stackoverflow.com/questions/3426182/how-to-escape-liquid-template-tags&quot;&gt;Jekyll is &lt;em&gt;greedy&lt;/em&gt; when it comes to parsing&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Of course, we always have the option of &lt;a href=&quot;https://github.com/blog/122-embedded-gists&quot;&gt;embedding Github gists&lt;/a&gt;.&lt;/p&gt;
+</description>
+        <pubDate>Wed, 08 Jul 2015 15:00:00 -0500</pubDate>
+        <link>https://jaromero.github.io/til/2015/07/markdown-renderer</link>
+        <guid isPermaLink="true">https://jaromero.github.io/til/2015/07/markdown-renderer</guid>
+        
+        <category>update</category>
+        
+        <category>jekyll</category>
+        
+        <category>markdown</category>
+        
+        
+      </item>
+    
+      <item>
+        <title>Welcome to TIL!</title>
+        <description>&lt;p&gt;Hello everyone!&lt;/p&gt;
+
+&lt;p&gt;This is a new blog I just set up to document and categorize everything I&amp;#39;ve learned during the day. It won&amp;#39;t be just about development though, but I hope this will also be useful to whomever wants to take a look at things.&lt;/p&gt;
+
+&lt;p&gt;I&amp;#39;m typing all this before the rest of the default Jekyll post, so I&amp;#39;ll just leave it as-is at the end for now.&lt;/p&gt;
+
+&lt;p&gt;For today though, I&amp;#39;ll just post my current gulpfile. It&amp;#39;s what I&amp;#39;ve come up with, admittedly just to be able to use bower and wiredep with jekyll:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-coffee&quot; data-lang=&quot;coffee&quot;&gt;&lt;span class=&quot;c1&quot;&gt;# Gulpfile&lt;/span&gt;
+
+&lt;span class=&quot;nv&quot;&gt;gulp        = &lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;gulp&amp;#39;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;browserSync = &lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;browser-sync&amp;#39;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;del         = &lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;del&amp;#39;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$           = &lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;gulp-load-plugins&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)()&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;wiredep     = &lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;wiredep&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;stream&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;shell       = &lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;shelljs&amp;#39;&lt;/span&gt;
+
+&lt;span class=&quot;nv&quot;&gt;reload = &lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;browserSync&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;reload&lt;/span&gt;
+
+&lt;span class=&quot;nv&quot;&gt;userefOpts =&lt;/span&gt;
+  &lt;span class=&quot;nv&quot;&gt;jekylljs: &lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;(content, target) -&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&amp;quot;&amp;lt;script src=&amp;#39;{{ &amp;#39;/&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;#{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;target&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39; | prepend: site.baseurl }}&amp;#39;&amp;gt;&amp;lt;/script&amp;gt;&amp;quot;&lt;/span&gt;
+  &lt;span class=&quot;nv&quot;&gt;jekyllcss: &lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;(content, target) -&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&amp;quot;&amp;lt;link rel=&amp;#39;stylesheet&amp;#39; href=&amp;#39;{{ &amp;#39;/&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;#{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;target&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39; |&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;        prepend: site.baseurl }}&amp;#39;&amp;gt;&amp;quot;&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;task&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;styles&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;=&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# Build scss styles into the staging and tmp directories&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;src&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;app/styles/**/*.scss&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;plumber&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;sourcemaps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;init&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;sass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;sync&lt;/span&gt;
+      &lt;span class=&quot;nv&quot;&gt;outputStyle: &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;expanded&amp;#39;&lt;/span&gt;
+      &lt;span class=&quot;nv&quot;&gt;precision: &lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;
+      &lt;span class=&quot;nv&quot;&gt;includePaths: &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;.&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;on&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;error&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;sass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;logError&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;autoprefixer&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;browsers: &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;last 2 versions&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;sourcemaps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;write&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;dest&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;.staging/styles&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;dest&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;.tmp/styles&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;reload&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;stream: &lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;task&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;scripts&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;=&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# Build coffeescript files into staging and tmp&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;src&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;app/scripts/**/*.{coffee,litcoffee}&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;coffee&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;on&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;error&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;(err) -&amp;gt;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;log&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;Error!&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;err&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;message&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;dest&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;.staging/scripts&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;dest&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;.tmp/scripts&amp;#39;&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;task&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;jekyll&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;moveAssets&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;=&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# Build the jekyll site for deployment&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# Uses _config.yml only&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# Run after useref to make sure all the files are prepared correctly&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;shell&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;exec&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;jekyll build&amp;#39;&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;task&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;jekyll:tmp&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;moveFiles&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;=&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# Build the jekyll site for serving with livereload&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# Uses both _config.yml and _config.serve.yml&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;shell&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;exec&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;jekyll build --config \&lt;/span&gt;
+&lt;span class=&quot;s&quot;&gt;        _config.yml,_config.serve.yml&amp;#39;&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# These two tasks are to be able to force a reload&lt;/span&gt;
+&lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;task&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;reloadAfterBuild&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;jekyll:tmp&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;reload&lt;/span&gt;
+&lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;task&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;reloadAfterScripts&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;scripts&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;reload&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;task&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;moveFiles&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;scripts&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;styles&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;=&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# Moves files to the staging directory to prepare for thejekyll build tasks&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# We&amp;#39;re doing this to avoid modifying the files in our working directory,&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# and also because of how jekyll works re: building files and basedir&lt;/span&gt;
+  &lt;span class=&quot;nv&quot;&gt;files = &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&amp;#39;app/.no-jekyll&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&amp;#39;app/*.md&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&amp;#39;app/*.xml&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&amp;#39;app/*.html&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&amp;#39;app/_layouts/**/*&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&amp;#39;app/_posts/**/*&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&amp;#39;app/_includes/**/*&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&amp;#39;app/images/**/*&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&amp;#39;app/fonts/**/*&amp;#39;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+
+  &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;src&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;files&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;base: &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;./app/&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;dest&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;.staging&amp;#39;&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;task&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;moveAssets&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;useref&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;=&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# Move compiled, useref&amp;#39;d CSS and JS files to where they belong&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;src&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;.staging/_includes/scripts/**/*.js&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;rename&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;dirname: &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;scripts&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;dest&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;.staging&amp;#39;&lt;/span&gt;
+
+  &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;src&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;.staging/_includes/styles/**/*.css&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;rename&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;dirname: &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;styles&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;dest&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;.staging&amp;#39;&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;task&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;useref&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;moveFiles&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;=&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# Do the useref on files in the staging directory&lt;/span&gt;
+  &lt;span class=&quot;nv&quot;&gt;assets = &lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;useref&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;assets&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;searchPath: &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;.&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;.staging&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+
+  &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;src&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;.staging/_includes/*.html&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;assets&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;*.js&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;uglify&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;*.css&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;minifyCss&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;compatibility: &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;*&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;assets&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;restore&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;replace&lt;/span&gt; &lt;span class=&quot;sr&quot;&gt;/build:(.*?)\ /g&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;build:jekyll$1 &amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;useref&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;userefOpts&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;dest&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;.staging/_includes&amp;#39;&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;task&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;images&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;=&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# Optimize images&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;src&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;app/images/**/*&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;isFile&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;cache&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;imagemin&lt;/span&gt;
+      &lt;span class=&quot;nv&quot;&gt;progressive: &lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;
+      &lt;span class=&quot;nv&quot;&gt;interlaced: &lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;
+      &lt;span class=&quot;nv&quot;&gt;svgoPlugins: &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[{&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;cleanupIDs: &lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;on&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;error&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;(err) -&amp;gt;&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;console&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;log&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;err&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;end&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;dest&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;dist/images&amp;#39;&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;task&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;fonts&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;=&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# Copy font files obtained with bower&lt;/span&gt;
+  &lt;span class=&quot;nv&quot;&gt;bowerFiles = &lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;main-bower-files&amp;#39;&lt;/span&gt;
+
+  &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;src&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;bowerFiles&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;filter: &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;**/*.{eot,svg,ttf,woff,woff2}&amp;#39;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;concat&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;app/fonts/**/*&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;dest&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;.tmp/fonts&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;dest&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;dist/fonts&amp;#39;&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;task&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;extras&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;=&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# Copy all files not handled by jekyll or other gulp tasks&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;src&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&amp;#39;app/*.*&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&amp;#39;!app/*.{html,md}&amp;#39;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;dot: &lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;dest&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;dist&amp;#39;&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;task&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;clean&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;=&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# Clean staging, tmp and _site dirs&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# Only really necessary for build&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;del&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&amp;#39;.staging&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&amp;#39;.tmp&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&amp;#39;dist/**/*&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&amp;#39;dist/.*&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&amp;#39;!dist/.git&amp;#39;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# Basic entry point&lt;/span&gt;
+&lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;task&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;build&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;jekyll&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;images&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;fonts&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;extras&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;=&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# Remove stray files from staging, just in case&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;del&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;.staging/_includes/scripts&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;.staging/_includes/styles&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+
+  &lt;span class=&quot;c1&quot;&gt;# Size up the whole thing&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;src&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;dist/**/*&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;size&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;title: &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;build&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;gzip: &lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;task&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;serve&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;jekyll:tmp&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;fonts&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;=&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# Run the web server&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# Build a temporary jekyll site out of the staging dir&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# and map the temp dir into the browsersync server&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;browserSync&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;notify: &lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;port: &lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;9000&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;server:&lt;/span&gt;
+      &lt;span class=&quot;nv&quot;&gt;baseDir: &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;.tmp&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;app&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+      &lt;span class=&quot;nv&quot;&gt;routes:&lt;/span&gt;
+        &lt;span class=&quot;s&quot;&gt;&amp;#39;/bower_components&amp;#39;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;bower_components&amp;#39;&lt;/span&gt;
+
+  &lt;span class=&quot;c1&quot;&gt;# Trigger a full rebuild when these change&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;watch&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&amp;#39;app/*.md&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&amp;#39;app/*.html&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&amp;#39;app/_includes/**/*&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&amp;#39;app/_layouts/**/*&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&amp;#39;app/_posts/**/*&amp;#39;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;reloadAfterBuild&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+
+  &lt;span class=&quot;c1&quot;&gt;# Trigger just a browser reload&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;watch&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&amp;#39;app/images/**/*&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&amp;#39;.tmp/fonts/**/*&amp;#39;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;on&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;change&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;reload&lt;/span&gt;
+
+  &lt;span class=&quot;c1&quot;&gt;# Path-specific tasks&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;watch&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;app/scripts/**/*.{coffee,litcoffee}&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;reloadAfterScripts&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;watch&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;app/styles/**/*.scss&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;styles&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;watch&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;app/fonts/**/*&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;fonts&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;watch&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;bower.json&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;wiredep&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;fonts&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;task&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;wiredep&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;=&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# Insert bower dependencies into files&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;src&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;_sass/*.scss&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;wiredep&lt;/span&gt;
+      &lt;span class=&quot;nv&quot;&gt;ignorePath: &lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/^(\.\.\/)+/&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;dest&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;_sass&amp;#39;&lt;/span&gt;
+
+  &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;src&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;_includes/*.html&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;wiredep&lt;/span&gt;
+      &lt;span class=&quot;nv&quot;&gt;ignorePath: &lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/^(\.\.\/)*\.\./&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;dest&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;_includes&amp;#39;&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;task&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;deploy&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;build&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;=&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;# Deploy to Github Pages&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;src&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;dist&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;subtree&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pipe&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;clean&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# Default task&lt;/span&gt;
+&lt;span class=&quot;nx&quot;&gt;gulp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;task&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;default&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;build&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;hr&gt;
+
+&lt;p&gt;You’ll find this post in your &lt;code&gt;_posts&lt;/code&gt; directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run &lt;code&gt;jekyll serve --watch&lt;/code&gt;, which launches a web server and auto-regenerates your site when a file is updated.&lt;/p&gt;
+
+&lt;p&gt;To add new posts, simply add a file in the &lt;code&gt;_posts&lt;/code&gt; directory that follows the convention &lt;code&gt;YYYY-MM-DD-name-of-post.ext&lt;/code&gt; and includes the necessary front matter. Take a look at the source for this post to get an idea about how it works.&lt;/p&gt;
+
+&lt;p&gt;Jekyll also offers powerful support for code snippets:&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-ruby&quot; data-lang=&quot;ruby&quot;&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;print_hi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;nb&quot;&gt;puts&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;Hi, &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;#{&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;print_hi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;Tom&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;#=&amp;gt; prints &amp;#39;Hi, Tom&amp;#39; to STDOUT.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Check out the &lt;a href=&quot;http://jekyllrb.com&quot;&gt;Jekyll docs&lt;/a&gt; for more info on how to get the most out of Jekyll. File all bugs/feature requests at &lt;a href=&quot;https://github.com/jekyll/jekyll&quot;&gt;Jekyll’s GitHub repo&lt;/a&gt;. If you have questions, you can ask them on &lt;a href=&quot;https://github.com/jekyll/jekyll-help&quot;&gt;Jekyll’s dedicated Help repository&lt;/a&gt;.&lt;/p&gt;
+</description>
+        <pubDate>Tue, 07 Jul 2015 15:00:00 -0500</pubDate>
+        <link>https://jaromero.github.io/til/2015/07/welcome-to-til</link>
+        <guid isPermaLink="true">https://jaromero.github.io/til/2015/07/welcome-to-til</guid>
+        
+        <category>update</category>
+        
+        
+      </item>
+    
+  </channel>
+</rss>
