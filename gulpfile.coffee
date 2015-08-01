@@ -7,6 +7,7 @@ wiredep     = require('wiredep').stream
 shell       = require 'shelljs'
 runSequence = require 'run-sequence'
 del         = require 'del'
+vinylPaths  = require 'vinyl-paths'
 
 reload = browserSync.reload
 
@@ -216,12 +217,11 @@ gulp.task 'wiredep', ->
       ignorePath: /^(\.\.\/)*\.\./
     .pipe gulp.dest 'app/_includes'
 
-gulp.task 'deploy', ['build'], ->
+gulp.task 'deploy', ->
   # Deploy to Github Pages
   gulp.src 'dist'
     .pipe $.subtree()
-
-  del ['dist']
+    .pipe vinylPaths del
 
 # Default task
 gulp.task 'default', ['build']
