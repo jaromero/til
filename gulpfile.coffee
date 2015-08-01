@@ -2,11 +2,11 @@
 
 gulp        = require 'gulp'
 browserSync = require 'browser-sync'
-del         = require 'del'
 $           = require('gulp-load-plugins')()
 wiredep     = require('wiredep').stream
 shell       = require 'shelljs'
 runSequence = require 'run-sequence'
+del         = require 'del'
 
 reload = browserSync.reload
 
@@ -66,10 +66,12 @@ gulp.task 'moveFiles', ['scripts', 'styles'], ->
     'app/*.md'
     'app/*.xml'
     'app/*.html'
+    'app/_data/**/*'
     'app/_layouts/**/*'
     'app/_posts/**/*'
     'app/_includes/**/*'
-    'app/images/**/*'
+    'app/p/**/*' # Pagination template
+    # 'app/images/**/*'
     'app/fonts/**/*'
   ]
 
@@ -132,29 +134,26 @@ gulp.task 'extras', ->
 
 gulp.task 'clean', ->
   # Clean staging, tmp and _site dirs
-  gulp.src [
+  # Only really necessary for build
+  del [
     '.staging'
     '.tmp'
     'dist/**/*'
-    '!dist/.git'
-  ],
-    dot: true
-  .pipe $.clean()
+    'dist/.*'
+  ]
 
 gulp.task 'cleanStray', ->
   # Removes stray files from staging after useref is done with them
-  gulp.src [
+  del [
     '.staging/_includes/scripts'
     '.staging/_includes/styles'
-  ],
-    dot: true
-  .pipe $.clean()
+  ]
 
 # Basic entry point
-gulp.task 'build', ->
+gulp.task 'build', ['clean'], ->
   # Clean first, then the rest
-  runSequence 'clean',
-    ['jekyll', 'images', 'fonts', 'extras'],
+  runSequence ['jekyll', 'fonts', 'extras'],
+    'images',
     ['cleanStray', 'size']
 
 gulp.task 'size', ->
@@ -162,9 +161,9 @@ gulp.task 'size', ->
   gulp.src 'dist/**/*'
     .pipe $.size {title: 'build', gzip: true}
 
-gulp.task 'serve', ->
-  # Cean first, then the rest
-  runSequence 'clean', ['jekyll:tmp', 'fonts'], 'browsersync'
+gulp.task 'serve', ['clean'], ->
+  # Clean first, then the rest
+  runSequence ['jekyll:tmp', 'fonts'], 'browsersync'
 
 gulp.task 'browsersync', ->
   # Run the web server
@@ -180,9 +179,11 @@ gulp.task 'browsersync', ->
   gulp.watch [
     'app/*.md'
     'app/*.html'
+    'app/_data/**/*'
     'app/_includes/**/*'
     'app/_layouts/**/*'
     'app/_posts/**/*'
+    'app/p/**/*'
     '_config.yml'
     '_config.serve.yml'
   ]
@@ -203,12 +204,14 @@ gulp.task 'browsersync', ->
 
 gulp.task 'wiredep', ->
   # Insert bower dependencies into files
-  gulp.src 'app/styles/*.scss'
+  gulp.src 'app/_sass/*.scss'
+    .pipe $.debug()
     .pipe wiredep
       ignorePath: /^(\.\.\/)+/
-    .pipe gulp.dest 'app/styles'
+    .pipe gulp.dest 'app/_sass'
 
   gulp.src 'app/_includes/*.html'
+    .pipe $.debug()
     .pipe wiredep
       ignorePath: /^(\.\.\/)*\.\./
     .pipe gulp.dest 'app/_includes'
@@ -217,7 +220,8 @@ gulp.task 'deploy', ['build'], ->
   # Deploy to Github Pages
   gulp.src 'dist'
     .pipe $.subtree()
-    .pipe $.clean()
+
+  del ['dist']
 
 # Default task
 gulp.task 'default', ['build']
