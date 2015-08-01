@@ -4,9 +4,9 @@ title:  "What, exactly, is apt-get update downloading?"
 date:   2015-07-31 22:30:00
 tags:   apt
 ---
-So I'm struggling with my ISP at the moment (whatever you do, do _not_ sign up with (izzi)[http://izzi.mx] because they absolutely don't know what they're doing), and I've noticed that for a few days now, my apt updates have been taking an extremely long amount of time to finish.
+So I'm struggling with my ISP at the moment (whatever you do, do _not_ sign up with [izzi](http://izzi.mx) because they absolutely don't know what they're doing), and I've noticed that for a few days now, my apt updates have been taking an extremely long amount of time to finish.
 
-
+![aptitude trying to update](/images/Screenshot 2015-07-31 23.08.32.png)
 
 There's clearly something going on there, but neither apt-get nor aptitude give you much info to work with as things happen. You _can_, however, find out what files it downloads in order to determine whether updates are available or not.
 
